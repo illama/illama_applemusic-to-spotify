@@ -1,0 +1,69 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Build executable
+      run: |
+        python build_exe.py
+        
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          release/AppleMusic-to-Spotify.exe
+          release/README.md
+          release/SETUP.md
+          release/config.env
+        body: |
+          ## 🎵 Apple Music to Spotify Converter
+          
+          ### 📦 Contenu de cette release
+          - **AppleMusic-to-Spotify.exe** - Exécutable principal
+          - **README.md** - Documentation
+          - **SETUP.md** - Guide de configuration
+          - **config.env** - Fichier de configuration (à renommer en .env)
+          
+          ### 🚀 Installation
+          1. Téléchargez et extrayez le zip
+          2. Renommez `config.env` en `.env`
+          3. Configurez vos identifiants Spotify dans le fichier `.env`
+          4. Lancez `AppleMusic-to-Spotify.exe`
+          
+          ### ⚙️ Configuration Spotify
+          - Créez une application sur https://developer.spotify.com/dashboard
+          - Ajoutez `http://127.0.0.1:8888/callback` comme URL de redirection
+          - Copiez le CLIENT_ID et CLIENT_SECRET dans le fichier `.env`
+          
+          ### 📋 Fonctionnalités
+          - Conversion de playlists Apple Music via URL
+          - Import depuis un fichier XML exporté d'Apple Music
+          - Import depuis un fichier texte avec liste de chansons
+          - Interface en français et anglais
+          
+          ### 🔧 Support
+          En cas de problème, consultez le fichier SETUP.md ou ouvrez une issue sur GitHub.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

@@ -169,14 +169,19 @@ def select_language():
     print("1. Français")
     print("2. English")
     while True:
-        choice = input("Choose language / Choisissez la langue (1-2): ").strip()
-        if choice == "1":
+        try:
+            choice = input("Choose language / Choisissez la langue (1-2): ").strip()
+            if choice == "1":
+                return 'fr'
+            elif choice == "2":
+                return 'en'
+            else:
+                print("Invalid choice. Please enter 1 or 2.")
+                print("Choix invalide. Veuillez entrer 1 ou 2.")
+        except (EOFError, RuntimeError):
+            # Fallback to French if stdin is not available
+            print("Using French by default / Utilisation du français par défaut")
             return 'fr'
-        elif choice == "2":
-            return 'en'
-        else:
-            print("Invalid choice. Please enter 1 or 2.")
-            print("Choix invalide. Veuillez entrer 1 ou 2.")
 
 def logout_spotify():
     try:
@@ -473,31 +478,56 @@ def print_progress_bar(iteration, total):
         print()
 
 def main():
+    lang = 'fr'  # Default language
     try:
         lang = select_language()
         print(LANGUAGES[lang]['title'])
         print("1.", LANGUAGES[lang]['option1'])
         print("2.", LANGUAGES[lang]['option2'])
         print("3.", LANGUAGES[lang]['option3'])
-        choice = input(f"\n{LANGUAGES[lang]['choose_option']}" ).strip()
+        
+        try:
+            choice = input(f"\n{LANGUAGES[lang]['choose_option']}" ).strip()
+        except (EOFError, RuntimeError):
+            print("Error reading input. Please run the program in a console.")
+            print("Erreur de lecture. Veuillez exécuter le programme dans une console.")
+            return
+            
         sp = manage_spotify_account(lang)
         if not sp:
-            input(LANGUAGES[lang]['press_enter'])
+            try:
+                input(LANGUAGES[lang]['press_enter'])
+            except (EOFError, RuntimeError):
+                pass
             return
         search_array = []
         if choice == "1":
-            url = input(LANGUAGES[lang]['playlist_url_prompt'])
-            search_array = get_playlist_from_url(url)
+            try:
+                url = input(LANGUAGES[lang]['playlist_url_prompt'])
+                search_array = get_playlist_from_url(url)
+            except (EOFError, RuntimeError):
+                print("Error reading URL input.")
+                return
         elif choice == "2":
             print("Veuillez placer votre fichier Library.xml (ou Music Library.xml, iTunes Library.xml) dans le même dossier que ce script.")
-            input("Appuyez sur Entrée quand c'est fait...")
+            try:
+                input("Appuyez sur Entrée quand c'est fait...")
+            except (EOFError, RuntimeError):
+                pass
             search_array = get_songs_from_xml(None, lang)
         elif choice == "3":
-            text_path = input(LANGUAGES[lang]['text_file_prompt'])
-            search_array = get_songs_from_text_file(text_path, lang)
+            try:
+                text_path = input(LANGUAGES[lang]['text_file_prompt'])
+                search_array = get_songs_from_text_file(text_path, lang)
+            except (EOFError, RuntimeError):
+                print("Error reading file path input.")
+                return
         else:
             print(LANGUAGES[lang]['invalid_option'])
-            input(LANGUAGES[lang]['press_enter'])
+            try:
+                input(LANGUAGES[lang]['press_enter'])
+            except (EOFError, RuntimeError):
+                pass
             return
         if search_array:
             print(LANGUAGES[lang]['found_songs'].format(len(search_array)))
@@ -506,12 +536,18 @@ def main():
                 print(LANGUAGES[lang]['conversion_complete'].format(result))
         else:
             print(LANGUAGES[lang]['no_songs'])
-        input(f"\n{LANGUAGES[lang]['press_enter']}")
+        try:
+            input(f"\n{LANGUAGES[lang]['press_enter']}")
+        except (EOFError, RuntimeError):
+            pass
     except Exception as e:
         print(LANGUAGES[lang]['error_unexpected'].format(e))
         print(LANGUAGES[lang]['error_details'])
         traceback.print_exc()
-        input(LANGUAGES[lang]['press_enter'])
+        try:
+            input(LANGUAGES[lang]['press_enter'])
+        except (EOFError, RuntimeError):
+            pass
 
 if __name__ == "__main__":
     main()
